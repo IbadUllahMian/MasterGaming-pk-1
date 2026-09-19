@@ -1,0 +1,1 @@
+import { HelpPage } from '@/components/support/TrustExperience'; import { pageMetadata } from '@/data/seo'; export const metadata=pageMetadata('MasterGaming.pk Help and Support','Get help with tournaments, account issues, payment proof, rewards, withdrawals, and manual review delays.','/help'); export default function Page(){return <HelpPage/>}

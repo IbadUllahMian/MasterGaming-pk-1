@@ -1,0 +1,561 @@
+/* Layout / structural skin for the embedded Payload admin (the Kite Content
+ * tab). Where admin-theme.css maps the design system onto Payload's *theming
+ * contract* (fonts, brand color, neutrals, radius — values only), this file
+ * restyles the *structure* of Payload's own edit view to match the Kite
+ * content-editor design: a metadata row and one rounded "section card" per
+ * field group (Page Details / SEO / Layout), with a header icon.
+ *
+ * The list view is NOT skinned here. Payload's DefaultListView is replaced
+ * outright by src/admin/KiteListView.tsx for every collection, so the ~200
+ * lines that used to repaint its header, search bar, table and paginator went
+ * with it. The only Payload markup left inside that view is the bulk-selection
+ * bar and the Filters panel, both reused deliberately and both skinned below.
+ *
+ * The dashboard is NOT skinned here: it is our own component
+ * (src/admin/Dashboard.tsx) and styles itself with design-system components and
+ * token utilities. Same for the save-state badge, section labels, block-row
+ * labels and the block shimmer — they moved to `@appsmithorg/kite-ui` primitives
+ * and no longer need CSS of their own. What's left in this file is only what
+ * reaches into DOM we don't own.
+ *
+ * Every color, radius and shadow below resolves to a design-system token from
+ * `@appsmithorg/kite-ui` (loaded by admin-ds.css), so Payload's own chrome
+ * matches the platform rather than approximating it.
+ *
+ * Unlike admin-theme.css, this file necessarily targets Payload's own BEM class
+ * names. Every selector here was verified against the compiled stylesheet in
+ * @payloadcms/ui v3.85 (node_modules/@payloadcms/ui/dist/styles.css). If Payload
+ * is upgraded, re-verify these class names — they are not a public API. The skin
+ * degrades gracefully: a renamed class just falls back to Payload's own styling.
+ *
+ * `!important` is kept throughout, but not for the reason it originally was.
+ * Payload wraps its whole stylesheet in `@layer payload-default` and everything
+ * here is unlayered, and layer precedence beats specificity outright — so these
+ * rules already win against anything Payload's own CSS declares, at any
+ * specificity, in any stylesheet order. What `!important` still buys is the
+ * inline styles Payload sets from JS on a few of these elements, and not having
+ * to re-verify ~80 declarations one at a time in a change that is already
+ * repainting every one of them. Dropping it is a safe follow-up, not part of
+ * this change. */
+
+:root {
+  /* Card chrome, aliased once from the design system's card + border tokens so
+   * the Payload containers we card-wrap below match a kite-ui `Card`. The shadow
+   * is Tailwind's `--shadow-xs`, which is exactly what the DS's
+   * `surface-elevation-1` class uses. */
+  --kite-card-bg: var(--color-bg-card);
+  --kite-card-border: var(--color-bd-neutral-subtle);
+  --kite-card-shadow: var(--shadow-xs);
+}
+
+/* ======================================================================
+ * App header -> gone
+ * ==================================================================== */
+/* Payload's top strip (`header.app-header`) carries the breadcrumb trail, the
+ * brand mark and the account link. None of the three belong in an admin
+ * embedded in a single Kite tab:
+ *   - the trail's last crumb restated the document title rendered directly
+ *     below it, and its only useful part — getting back to the list — is now
+ *     an explicit control beside that title (src/admin/BackToParent);
+ *   - the account link opened a Payload profile page for a machine-provisioned
+ *     user, which the config replaces with a redirect (views.account);
+ *   - the brand mark duplicates Kite's own chrome around the iframe.
+ * The whole line goes, reclaiming a row of vertical space in a pane that is
+ * already only as tall as the Content tab. */
+.app-header {
+  display: none !important;
+}
+
+/* Document title row -> the Back control sits inline, left of the title.
+ * `data-kite-title-row` is stamped on the title's own parent by BackToParent,
+ * which portals itself in: Payload exposes no slot beside the title, and its
+ * container has no stable class of its own to target. */
+[data-kite-title-row] {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+}
+[data-kite-title-row] .kite-back-link {
+  order: -1;
+}
+
+/* ======================================================================
+ * List view -> bulk-selection bar
+ * ====================================================================== */
+/* Everything else in the list view is KiteListView's own design-system markup;
+ * the one Payload element left inside it is `ListSelection` (the
+ * "N selected - Edit / Delete" bar), reused because it owns the bulk-action
+ * modals and their delete semantics. Only its typography is aligned here.
+ *
+ * Payload's own rules for this element live in `@layer payload-default`, so
+ * these unlayered declarations win without needing `!important`. */
+.list-selection {
+  /* Payload pushes the bar to the right edge of the row it owns. Here it sits
+   * beside the result count instead, so the auto margin has to go. */
+  margin-left: 0;
+  gap: var(--spacing);
+  color: var(--color-fg-subtle);
+  font-size: var(--text-sm);
+}
+.list-selection__button {
+  color: var(--color-fg-normal);
+  text-underline-offset: 2px;
+}
+.list-selection__button:hover {
+  color: var(--color-fg-primary);
+}
+
+/* ======================================================================
+ * Edit view
+ * ==================================================================== */
+/* Hide the document tabs row. With the API URL hidden and versions/drafts off,
+ * the only tab left is a lone, redundant "Edit" — drop the whole strip so the
+ * header carries just the title and the save control. */
+.doc-tabs {
+  display: none !important;
+}
+
+/* Document title -> larger, matching the list scale. */
+.doc-controls + * h1,
+.collection-edit h1,
+.global-edit h1 {
+  font-size: 30px !important;
+  font-weight: 600 !important;
+  color: var(--color-fg-normal) !important;
+}
+
+/* `admin.description` is rendered as a document slot on the edit view (class
+ * `custom-view-description`), where it reads as a stray subtitle under the doc
+ * title. Hide it — the list view is KiteListView, which renders the same
+ * description as its own page subtitle rather than through this slot. */
+.custom-view-description {
+  display: none !important;
+}
+
+/* Drop Payload's padding-bottom under the doc header (breadcrumb + title) so it
+ * sits tight against the metadata strip below. */
+.doc-header {
+  padding-bottom: 0 !important;
+}
+
+/* Sticky freeze point for the save strip. `.doc-controls` (the strip carrying
+ * the metadata row and the save controls) is `position: sticky`, and below
+ * Payload's 1024px breakpoint — which the embedded Content pane drops under
+ * well before the window does, sitting between the tab rail and the chat
+ * panel — Payload stacks it into two rows and freezes it at `top: -56px`, an
+ * offset sized to scroll its OWN one-line metadata row out of view so the
+ * controls row below lands flush.
+ * This skin restyles that row (stacked label over value, plus an icon), so the
+ * hardcoded offset no longer matches its height and the strip freezes past the
+ * pane's top edge — leaving the Save button clipped, and unreachable without
+ * scrolling back up. Freeze the strip itself instead: the position then holds
+ * whatever this file does to the row's height. Above the breakpoint Payload
+ * already uses 0, so nothing changes on a wide pane.
+ *
+ * Payload's offset is written as `.doc-controls.gutter` (the strip is a
+ * `Gutter`, which emits its own base class alongside the directional
+ * modifiers), but this override deliberately does NOT mirror that qualifier:
+ * `.doc-controls` is the same single element, and matching it alone keeps the
+ * freeze point from depending on which classes Payload's wrapper happens to
+ * emit. Losing the qualifier costs nothing in the cascade: importance is
+ * compared before specificity, so this `!important` beats Payload's more
+ * specific but non-important declaration outright — and even without it,
+ * unlayered rules outrank `@layer payload-default` at any specificity. */
+.doc-controls {
+  top: 0 !important;
+}
+
+/* Metadata strip (Last modified / Created) -> a flush row (no card) with a
+ * calendar icon per entry and the label stacked above its date; the two entries
+ * are separated by spacing. It sits flush-left under the doc title, above
+ * Payload's default doc-controls hairline. Payload renders this as
+ *   ul.doc-controls__meta
+ *     li.doc-controls__list-item.doc-controls__value-wrap
+ *       p.doc-controls__label  +  p.doc-controls__value
+ * The label text carries a trailing ":" which reads fine stacked. */
+.doc-controls__meta {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 32px !important;
+  padding: 0 !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+/* Drop Payload's right-edge fade overlay (meant for a scrolling strip). */
+.doc-controls__meta::after {
+  display: none !important;
+}
+/* Each timestamp -> icon column + stacked label/value. */
+.doc-controls__meta .doc-controls__value-wrap {
+  display: grid !important;
+  grid-template-columns: 18px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 1px;
+  align-items: center;
+  overflow: visible !important;
+  max-width: none !important;
+}
+/* The lucide `calendar` glyph, as a mask rather than a colored data-URI image, so
+ * its color comes from a design-system token instead of a hex baked into the
+ * SVG. Keep in sync with the icon set used by the admin components. */
+.doc-controls__meta .doc-controls__value-wrap::before {
+  content: '';
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
+  width: 18px;
+  height: 18px;
+  background-color: var(--color-fg-subtle);
+  mask: center / contain no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+}
+.doc-controls__meta .doc-controls__label {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--color-fg-subtle) !important;
+  font-size: 12px !important;
+}
+.doc-controls__meta .doc-controls__value {
+  grid-column: 2;
+  grid-row: 2;
+  color: var(--color-fg-normal) !important;
+  font-weight: 600 !important;
+}
+
+/* --- Section cards: one per field group (className `kite-section` set in
+ *     Pages.ts on the Page Details + SEO groups and the Layout blocks field).
+ *     The className lands on the outer field wrapper, which we card-wrap to
+ *     match a kite-ui `Card`. The header icon + label come from the custom Label
+ *     component (SectionLabel), rendered inside the group/blocks header. ----- */
+.kite-section {
+  background: var(--kite-card-bg) !important;
+  border: 1px solid var(--kite-card-border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--kite-card-shadow);
+  padding: 22px 24px !important;
+  /* Tight, single-source gap between cards: own the bottom margin and zero
+   * Payload's per-field top margin so the spacing isn't 22px + Payload's. */
+  margin-top: 0 !important;
+  margin-bottom: 12px !important;
+  /* Payload pulls `.group-field` edge-to-edge with negative side margins, so the
+   * SEO/Page Details group cards spilled wider than the Layout (blocks) card and
+   * looked misaligned. Reset them so every section card shares the same width. */
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+/* Drop Payload's inner indent/gutter lines inside our cards. */
+.kite-section .group-field,
+.kite-section .group-field--gutter,
+.kite-section .gutter--left,
+.kite-section .render-fields {
+  border-left: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+/* The group/blocks header is the card header — no inner background or border. */
+.kite-section .group-field__header,
+.kite-section .blocks-field__header {
+  background: none !important;
+  border: 0 !important;
+  margin-bottom: 16px !important;
+  padding: 0 !important;
+}
+
+/* Layout: header actions (Collapse/Expand All) sit opposite the label. */
+.kite-section .blocks-field__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Block rows inside the Layout card -> light, bordered sub-cards so the nested
+ * structure reads as nested surfaces. Payload's Collapsible already rounds its
+ * own corners per-part (toggle-wrap on top, content on the bottom), so `overflow`
+ * stays `visible`: clipping the row would cut off a field's dropdown menu (e.g.
+ * the Background select) when it opens past the row's edge. */
+.kite-section .blocks-field__rows .blocks-field__row {
+  border: 1px solid var(--kite-card-border) !important;
+  border-radius: var(--radius-md) !important;
+  margin-bottom: 12px !important;
+  overflow: visible;
+}
+.kite-section .blocks-field__block-header {
+  background: var(--color-bg-neutral) !important;
+}
+
+/* --- Filters panel + every react-select in the admin ------------------------
+ * The collapsed list-controls row (search box, Columns/Filters toggles) was
+ * already skinned above; this picks up where that stopped — the filter panel
+ * those toggles open, and the dropdowns inside it, which arrived unstyled.
+ *
+ * These stay Payload's own controls rather than becoming kite-ui components.
+ * The whole row is rendered by `ListControls`, which sits ABOVE the first
+ * available override slot (`beforeListTable`) in Payload's DefaultListView, so
+ * it cannot be partially replaced — and replacing it wholesale means
+ * reimplementing `reduceFieldsToOptions` and the per-type operator map, neither
+ * of which @payloadcms/ui exports (`./elements/*` only resolves directories
+ * with an index). A query builder that silently returns the wrong rows is a
+ * worse outcome than one built from Payload's markup wearing DS tokens.
+ *
+ * No `!important` needed: react-select runs with `unstyled: true` (its only
+ * inline style is `menu.zIndex: undefined`), and Payload's own rules live in
+ * `@layer payload-default`, which unlayered rules outrank — see deviation 3 in
+ * admin-ds.css. No `@source` line either: `.rs__*` class names are emitted by
+ * react-select at runtime, so there is nothing for Tailwind to harvest.
+ *
+ * Scope note: `.rs__*` is EVERY react-select in the admin, not just Filters —
+ * relationship fields and any other select surface inherit this too. */
+
+.where-builder {
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-bd-neutral-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.where-builder__label {
+  color: var(--color-fg-normal);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.where-builder__or-filters + .where-builder__or-filters,
+.where-builder__and-filters {
+  margin-top: 8px;
+}
+/* The "Or" / "And" separators between condition rows. */
+.where-builder__or-filters > li::before,
+.where-builder__and-filters > li::before {
+  color: var(--color-fg-subtle);
+  font-size: 12px;
+}
+.condition__wrap {
+  gap: 8px;
+}
+/* Circular add/remove affordances at the end of each condition row. */
+.where-builder__add-or,
+.where-builder__add-first-filter,
+.condition__actions-add,
+.condition__actions-remove {
+  color: var(--color-fg-neutral);
+  border-radius: 9999px;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.where-builder__add-or:hover,
+.where-builder__add-first-filter:hover,
+.condition__actions-add:hover,
+.condition__actions-remove:hover {
+  color: var(--color-fg-emphasis);
+  background: var(--color-bg-neutral-subtle-hover);
+}
+/* The free-text "Enter a value" input, so it matches the DS Input the edit
+ * view now renders. This is an imitation, which everywhere else in this work is
+ * rejected in favour of using the real component — WhereBuilder is the
+ * exception, because its inputs are rendered inside a Payload element that is
+ * reused wholesale (see KiteListView). Every value is expressed with the token
+ * the DS Input's own utility resolves to (`h-9`, `px-3`, `text-sm`,
+ * `rounded-md`), so it tracks the design system instead of freezing today's
+ * pixels. */
+.condition__value input,
+.condition__value .field-type input {
+  background: var(--color-bg);
+  border: 1px solid var(--color-bd-neutral-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-fg-normal);
+  font-size: var(--text-sm);
+  height: calc(var(--spacing) * 9);
+  padding: 0 calc(var(--spacing) * 3);
+}
+.condition__value input:focus,
+.condition__value .field-type input:focus {
+  border-color: var(--color-bd-focus);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+
+/* react-select: closed control */
+.rs__control {
+  background: var(--color-bg);
+  border: 1px solid var(--color-bd-neutral-subtle);
+  border-radius: var(--radius-md);
+  min-height: 36px;
+}
+.rs__control:hover {
+  border-color: var(--color-bd-neutral);
+}
+.rs__control--is-focused {
+  border-color: var(--color-bd-focus);
+  box-shadow: var(--shadow-focus);
+}
+.rs__value-container {
+  padding: 0 12px;
+}
+.rs__single-value,
+.rs__input,
+.rs__input-container {
+  color: var(--color-fg-normal);
+  font-size: 14px;
+}
+.rs__placeholder {
+  color: var(--color-fg-subtle);
+  font-size: 14px;
+}
+.rs__indicator {
+  color: var(--color-fg-subtle);
+  padding: 0 8px;
+}
+.rs__indicator:hover {
+  color: var(--color-fg-neutral);
+}
+/* react-select's vertical rule between value and chevron — the DS select has
+ * no such divider. */
+.rs__indicator-separator {
+  display: none;
+}
+
+/* react-select: open menu. The grey full-bleed highlight bar on the focused
+ * option is react-select's default and the most visibly off-design part of the
+ * filter builder; `--is-focused` is keyboard/pointer hover, `--is-selected` is
+ * the current value, and both need to read as DS list rows. */
+.rs__menu {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-bd-neutral-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  margin-top: 4px;
+  overflow: hidden;
+  padding: 4px;
+}
+.rs__menu-list {
+  padding: 0;
+}
+.rs__option {
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-fg-normal);
+  font-size: 14px;
+  padding: 7px 10px;
+}
+.rs__option--is-focused {
+  background: var(--color-bg-neutral-subtle-hover);
+}
+.rs__option--is-selected {
+  background: var(--color-bg-neutral-soft);
+  font-weight: 600;
+}
+.rs__option--is-selected.rs__option--is-focused {
+  background: var(--color-bg-neutral-soft-hover);
+}
+.rs__menu-notice {
+  color: var(--color-fg-subtle);
+  font-size: 14px;
+  padding: 10px;
+}
+.rs__group-heading {
+  color: var(--color-fg-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 8px 10px 4px;
+  text-transform: uppercase;
+}
+
+/* --- Column sort controls ---------------------------------------------------
+ * The asc/desc chevrons in each table header. KiteListView rebuilds the table
+ * from the design system but deliberately reuses Payload's `column.Heading`,
+ * because that node carries this sort control already wired to the list query —
+ * rendering our own would mean deciding per field whether sorting is even valid
+ * (it is not, for arrays/blocks/richText) and a wrong guess errors server-side.
+ * So the control stays Payload's and is skinned to DS tokens here. */
+.sort-column__label {
+  color: var(--color-fg-neutral);
+  font-size: 13px;
+  font-weight: 600;
+}
+.sort-column__buttons {
+  gap: 2px;
+}
+.sort-column__button {
+  color: var(--color-fg-neutral-subtle);
+  transition: color 0.15s ease;
+}
+.sort-column__button:hover {
+  color: var(--color-fg-neutral);
+}
+.sort-column__asc--active,
+.sort-column__desc--active,
+.sort-column__button--active {
+  color: var(--color-fg-emphasis);
+}
+
+/* --- Confirmation modal (leave-without-saving) ------------------------------
+ * Payload renders this as centred text floating over a blurred, whitened wash:
+ * `.confirmation-modal__wrapper` has padding and a max-width but NO surface of
+ * its own (verified in @payloadcms/ui styles.css), and `.confirmation-modal`
+ * paints `--theme-bg` at 0.75 plus an 8px backdrop blur.
+ *
+ * The platform's dialogs are the opposite pattern — a bordered card on a dim
+ * scrim (kite-ui DialogContent: `bg-bg-popover`, `rounded-lg`, `border`, `p-6`,
+ * `shadow-lg`, `max-w-lg`, footer `justify-end`). Repainted here to match, so a
+ * Payload-owned confirmation reads like a product dialog. */
+.confirmation-modal:before {
+  background: #000 !important;
+  opacity: 0.5 !important;
+}
+.confirmation-modal:after {
+  backdrop-filter: none !important;
+}
+.confirmation-modal__wrapper {
+  background: var(--color-bg-popover);
+  border: 1px solid var(--color-bd-neutral-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  gap: 16px;
+  max-width: 512px;
+  padding: 24px;
+}
+.confirmation-modal__content h1,
+.confirmation-modal__content h2 {
+  color: var(--color-fg-normal);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.confirmation-modal__content p {
+  color: var(--color-fg-subtle);
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* The design system right-aligns dialog actions; Payload left-aligns them. */
+.confirmation-modal__controls {
+  justify-content: flex-end;
+}
+
+/* Button geometry inside the modal. admin-theme.css remaps Payload's button
+ * COLOURS via its custom props, but not its shape: `.btn` keeps
+ * `border-radius: var(--style-radius-s)`, `font-weight: normal` and a
+ * `margin-block: calc(var(--base) * 1.2)`, so a colour-correct button still
+ * reads as Payload's — squarer, lighter and taller than the design system's.
+ * These are kite-ui's Button defaults (`rounded-md`, `font-semibold`,
+ * `text-base`, `min-h-9`, `px-4 py-2`).
+ *
+ * Scoped to the modal on purpose: `.btn` is also every icon-only button in the
+ * admin (the preview eye, the doc-controls kebab), and 16px of inline padding
+ * would deform those. */
+.confirmation-modal__controls .btn {
+  --btn-padding-block-end: 8px;
+  --btn-padding-block-start: 8px;
+  --btn-padding-inline-end: 16px;
+  --btn-padding-inline-start: 16px;
+  align-items: center;
+  border-radius: var(--radius-md) !important;
+  display: inline-flex;
+  font-size: var(--text-base) !important;
+  font-weight: 600 !important;
+  justify-content: center;
+  line-height: 20px !important;
+  margin-block: 0 !important;
+  min-height: 36px;
+}

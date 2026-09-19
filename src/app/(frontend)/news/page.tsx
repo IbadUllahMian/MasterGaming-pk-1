@@ -1,0 +1,1 @@
+import { NewsPage } from '@/components/platform/Platform'; import { pageMetadata } from '@/data/seo'; export const metadata = pageMetadata('Free Fire Tournament News', 'Read MasterGaming.pk tournament updates, format notes, results posts, and practical guidance for Free Fire players.', '/news'); export default function Page(){ return <NewsPage/>; }

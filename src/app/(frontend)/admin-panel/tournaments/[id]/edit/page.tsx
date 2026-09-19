@@ -1,0 +1,1 @@
+import { AdminScreen } from '@/components/admin/AdminExperience'; export default async function Page({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; return <AdminScreen form="edit" tournamentId={id} />; }

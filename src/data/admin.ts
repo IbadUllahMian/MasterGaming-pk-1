@@ -1,0 +1,9 @@
+import { players, teams } from './accounts';
+import { commissions, manualTransactions, membership, paymentProofs, promoCodes, referral, withdrawals } from './finance';
+import { tournaments } from './platform';
+export type AdminRole='Player'|'Team Captain'|'Moderator'|'Admin'|'Super Admin';
+export const adminIdentity={displayName:'Tournament Desk',role:'Admin' as AdminRole};
+export const adminStats=[['Verified tournaments',String(tournaments.length)],['Registered players',String(players.length)],['Verified teams',String(teams.length)],['Verified results','0'],['Membership reviews',membership?'1':'0'],['Payment proof reviews',String(paymentProofs.length)],['Manual ledger records',String(manualTransactions.length)],['Withdrawal reviews',String(withdrawals.length)]];
+export const adminActivity:string[]=[];
+export const adminRows={tournaments:[],memberships:membership?[['Membership','Registered user','Manual review','']]:[], 'payment-proofs':paymentProofs.map(x=>[x.id,x.registration,x.status,x.submitted]),credits:manualTransactions.map(x=>[x.id,x.type,x.status,x.date]),rewards:[],withdrawals:withdrawals.map(x=>[x.id,x.method,x.status,x.submitted]),referrals:referral?[['Referral','Manual review','', '']]:[], 'promo-codes':promoCodes.map(x=>[x.code,x.status,x.note,'']),transactions:manualTransactions.map(x=>[x.id,x.type,x.status,x.date]),commissions:commissions.map(x=>[x.id,x.tournament,x.status,x.reviewed]),matches:[],registrations:[],players:[],teams:[],results:[],news:[],notifications:[],support:[],reports:[],settings:[],activity:[],leaderboards:[]};
+export const adminNav=['Dashboard','Tournaments','Games','Modes','Rules','Scoring Systems','Tournament Formats','Rank Systems','Achievements','Matches','Registrations','Memberships','Payment Proofs','Credits','Rewards','Withdrawals','Referrals','Promo Codes','Transactions','Commissions','Support','Players','Teams','Leaderboards','Results','News','Notifications','Reports','Settings','Activity'];

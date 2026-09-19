@@ -1,0 +1,7 @@
+export const games=[{id:'free-fire',name:'Free Fire',status:'Primary game'}] as const;
+export const modes=[{id:'br',name:'Battle Royale',short:'BR',description:'Solo, Duo, or Squad play with placement and kill scoring.',formats:['Solo','Duo','Squad']},{id:'cs',name:'Clash Squad',short:'CS',description:'4v4 team brackets with rounds and winner advancement.',formats:['4v4','BO3','BO5']},{id:'lone-wolf',name:'Lone Wolf',short:'LW',description:'1v1 or 2v2 elimination brackets and winner advancement.',formats:['1v1','2v2','Single elimination']}] as const;
+export const internalRanks=['New Player','Rookie','Warrior','Elite','Champion','Legend','Master'] as const;
+export const achievementDefinitions=[['First Tournament','Complete a verified tournament entry.'],['First Win','Record a verified match win.'],['10 Matches Played','Complete ten verified matches.'],['Champion','Win a verified tournament.'],['Top Player','Finish a verified season at the top tier.']] as const;
+export const competitiveRules={br:['Solo, Duo, or Squad registration','Placement points','Kill points','Total score','Configured map rotation'],cs:['4v4 team registration','Best of 3 or Best of 5','Round progression','Winner advancement'],loneWolf:['1v1 or 2v2 brackets','Elimination progression','Winner advancement']} as const;
+export type BrScoreInput={placementPoints:number;killPoints:number};
+export const calculateBrTotal=(result:BrScoreInput)=>result.placementPoints+result.killPoints;

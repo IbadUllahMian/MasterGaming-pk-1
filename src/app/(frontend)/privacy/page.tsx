@@ -1,0 +1,2 @@
+import { LegalPage } from '@/components/support/TrustExperience'; import { trustPages } from '@/data/trust'; import { pageMetadata } from '@/data/seo';
+export const metadata=pageMetadata('MasterGaming.pk Privacy Policy','Read the MasterGaming.pk privacy policy for manual registration, support, payment proof, and withdrawal reviews.','/privacy'); export default function Page(){return <LegalPage page={trustPages.privacy}/>}

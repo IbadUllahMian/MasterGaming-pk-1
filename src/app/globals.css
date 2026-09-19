@@ -1,0 +1,100 @@
+@import 'tailwindcss';
+/* Tailwind v4 registers plugins from CSS. The rich-text block and the
+ * collection-item article body render lexical HTML inside `prose` wrappers
+ * (`prose-neutral` / `prose-invert`); without this plugin those classes are
+ * no-ops and the content renders as unstyled flow text. */
+@plugin "@tailwindcss/typography";
+
+/* This is the *public site's* stylesheet. The embedded CMS admin has its own
+ * Tailwind entry point (`src/admin/admin-ds.css`) with its own token set, so
+ * scanning `src/admin` here only harvests class names the site never renders —
+ * about 4.5KB of dead utilities in every generated site's CSS. Exclude it.
+ *
+ * The path is relative to THIS file (`src/app/` -> `src/admin`). A project-root
+ * spelling such as "./src/admin" silently matches nothing rather than erroring,
+ * so verify any change to it against the built CSS. */
+@source not "../admin";
+
+@theme { --color-neon: #d3ff24; --radius-card: 18px; --font-sans: Inter, Arial, sans-serif; }
+
+html { background: #000; scroll-behavior: smooth; }
+body { background: #000; color: #fff; font-family: var(--font-sans); }
+.display-title { font-weight: 800; letter-spacing: -.055em; line-height: .98; }
+.body-copy { color: rgba(255,255,255,.58); line-height: 1.7; }
+.kicker { color: rgba(255,255,255,.58); font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.kicker::before { content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 9px 1px 0; border-radius: 50%; background: #d3ff24; }
+.dark-card { border: 1px solid rgba(255,255,255,.08); border-radius: 18px; background: rgba(255,255,255,.035); }
+.field { display: grid; gap: 8px; color: rgba(255,255,255,.65); font-size: 12px; font-weight: 600; }
+.field input, .field select, .field textarea { width: 100%; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: #0b0b0b; color: #fff; padding: 11px 12px; font-size: 14px; font-weight: 400; outline: none; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: #d3ff24; }
+
+/* Match the font smoothing source sites near-universally set — both halves,
+ * as the admin theme already does (src/admin/admin-theme.css). This template
+ * seeds every Payload site, not only migrations; without the rule a migrated
+ * page's glyphs render slightly heavier than its source, which surfaces as a
+ * page-wide text diff against the original. */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide Next.js dev/build indicators and error overlays. `devIndicators: false`
+ * in next.config.js disables the build-activity badge, but the dev-tools
+ * button and error toasts still render into <nextjs-portal> in dev. End
+ * users viewing the live sandbox should not see these. The element does not
+ * exist in production builds, so this rule is a harmless no-op there. */
+nextjs-portal {
+  display: none !important;
+}
+
+/* Scroll reveal — pairs with src/components/scroll-reveal.tsx (mounted once
+ * in the (frontend) layout). Elements with `reveal` fade + rise in when they
+ * enter the viewport. The hidden state is gated on `html.js` (set by the
+ * layout's inline head script) so content renders visible when scripting is
+ * disabled or the observer never runs — never hide reveal content in an
+ * ungated base rule. Reduced motion renders everything in place, no
+ * animation. */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+html.js .reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Phase 1 platform system: adaptive spacing and content-led heights keep all
+ * sections within narrow viewports without brittle fixed-height layouts. */
+.platform-shell { max-width: 1280px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+.platform-hero { position: relative; overflow: clip; border-bottom: 1px solid rgba(255,138,66,.18); background: radial-gradient(circle at 78% 18%, rgba(166,255,67,.18), transparent 25%), radial-gradient(circle at 15% 30%, rgba(255,112,50,.13), transparent 26%), #111217; }
+.platform-orb { position:absolute; border:1px solid rgba(166,255,67,.22); border-radius:999px; filter: blur(.2px); animation: platform-float 9s ease-in-out infinite; }
+.platform-orb-one { width:26rem; height:26rem; right:-11rem; top:-12rem; }.platform-orb-two { width:17rem; height:17rem; right:16%; bottom:-12rem; animation-delay:-4s; }
+.platform-title { color:#f0f2f5; font-size:clamp(2.7rem,7vw,6.4rem); font-weight:800; letter-spacing:-.065em; line-height:.91; }.platform-heading { color:#f0f2f5; font-size:clamp(1.9rem,4vw,3.25rem); font-weight:800; letter-spacing:-.055em; line-height:1; }.platform-label { color:#9ba1a8; font-size:.69rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }.platform-card { border:1px solid #292b31; border-radius:12px; background:linear-gradient(145deg,rgba(35,37,43,.92),rgba(24,25,29,.92)); box-shadow:0 14px 40px rgba(0,0,0,.18); padding:1.5rem; color:#e6e8eb; transition:transform 150ms ease,border-color 150ms ease; }.platform-card:hover { transform:translateY(-4px); border-color:rgba(166,255,67,.38); }.platform-button { display:inline-flex; align-items:center; justify-content:center; min-height:48px; border-radius:8px; background:#a6ff43; padding:.75rem 1.1rem; color:#10120d; font-size:.9rem; font-weight:700; transition:transform 120ms ease,background-color 120ms ease; }.platform-button:hover { background:#c0ff79; }.platform-button:active { transform:scale(.97); }.platform-button.secondary { border:1px solid #34363d; background:transparent; color:#e6e8eb; }.platform-link { color:#b6f978; font-size:.86rem; font-weight:600; }.platform-filter,.platform-tab { min-height:48px; border:1px solid #2c2f35; border-radius:8px; background:#191b20; padding:.75rem 1rem; color:#dce0e5; text-align:left; transition:border-color 150ms ease,background 150ms ease; }.platform-filter:hover,.platform-tab:hover,.platform-tab.active { border-color:#a6ff43; background:rgba(166,255,67,.1); }.platform-status { border-radius:999px; padding:.3rem .55rem; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }.platform-status.live { background:rgba(255,77,105,.16); color:#ff8094; }.platform-status.upcoming,.platform-status.open { background:rgba(166,255,67,.13); color:#baff78; }.platform-status.completed { background:rgba(151,160,176,.15); color:#b5bdc8; }.platform-controls { display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }.platform-input { min-height:46px; border:1px solid #30333a; border-radius:8px; background:#181a1f; padding:0 .8rem; color:#e6e8eb; outline:none; }.platform-input:focus { border-color:#a6ff43; }.platform-table { width:100%; border-collapse:collapse; text-align:left; font-size:.86rem; }.platform-table th { color:#9ba1a8; font-size:.68rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }.platform-table th,.platform-table td { border-bottom:1px solid rgba(255,255,255,.08); padding:.9rem .5rem; }.platform-table th:not(:nth-child(2)),.platform-table td:not(:nth-child(2)) { text-align:right; }.platform-table th:first-child,.platform-table td:first-child { text-align:left; }.platform-cta { border:1px solid rgba(166,255,67,.25); border-radius:14px; background:radial-gradient(circle at top right,rgba(166,255,67,.16),transparent 35%),#1a1d1c; padding:clamp(1.6rem,5vw,3.5rem); }
+@keyframes platform-float { 0%,100% { transform:translate3d(0,0,0); } 50% { transform:translate3d(0,18px,0); } }
+@media (min-width:640px) { .platform-shell { padding-left:32px; padding-right:32px; } }
+
+/* Site-wide reduced-motion guard: every animation and transition collapses to
+ * a single frame when the visitor asks for reduced motion. Site code relies
+ * on this guard instead of wrapping each animation individually — keep it.
+ * (Loaded by the (frontend) layout only — the embedded CMS admin has its own
+ * stylesheet entry, so admin UI motion is untouched.) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

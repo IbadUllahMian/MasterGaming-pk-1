@@ -1,0 +1,154 @@
+/* Maps the Kite design system onto Payload's theming contract.
+ *
+ * Every value here comes from a `@appsmithorg/kite-ui` token (loaded by
+ * admin-ds.css) — the same package the platform frontend consumes — so the
+ * embedded admin and the rest of the product share one source of truth for
+ * brand, neutrals, typography, radius and focus. Nothing in this file defines a
+ * color of its own.
+ *
+ * What gets mapped, and onto which documented Payload variable:
+ *   typography -> --font-body / heading font   (kite-ui --font-family-*)
+ *   brand      -> .btn--style-primary          (kite-ui --color-bg-primary)
+ *   focus      -> --accessibility-outline      (kite-ui --color-bd-focus)
+ *   neutrals   -> --color-base-*               (kite-ui gray palette)
+ *   shape      -> --style-radius-*             (Tailwind radius scale)
+ *
+ * Only Payload variables verified against @payloadcms/ui v3.85 are touched
+ * (colors.scss base scale + app.scss theme/font/radius/outline vars, and the
+ * Button element's local --bg-color/--color/--hover-* custom props). No guessed
+ * internal class names.
+ *
+ * `!important` on the custom-property declarations: Payload's own `:root` block
+ * sits in `@layer payload-default`, so unlayered rules here already outrank it,
+ * but Payload also re-declares several of these inside `[data-theme]` blocks at
+ * higher specificity. Custom-property declarations honor `!important`, so it is
+ * kept for the ones Payload re-declares per theme.
+ *
+ * Loaded via a side-effect import from HiddenNav.tsx (always mounted in the
+ * authenticated admin shell), after admin-ds.css. The auto-login flow means the
+ * unauthenticated login screen is effectively never shown in the product. */
+
+/* -- Product fonts. kite-ui names the families (--font-family-base /
+ *    --font-family-heading) but ships no font files, and the admin iframe is a
+ *    separate document that does not inherit the platform shell's faces — so
+ *    they are self-hosted here. ------------------------------------------- */
+@font-face {
+  font-family: 'TikTok Sans';
+  font-style: oblique 0deg -6deg;
+  font-weight: 300 900;
+  font-stretch: 75% 150%;
+  font-display: swap;
+  src: url('./fonts/tiktok-sans.woff2') format('woff2');
+}
+
+/* `format('woff2')`, NOT `format('woff2-variations')`. The latter is an early
+ * variable-fonts draft token that browsers dropped; an unrecognised format
+ * string makes the whole `src` ignored, so this @font-face had no usable source
+ * and Onest silently never loaded — headings fell back to the base family and
+ * rendered in a visibly different typeface from the platform's. The file is a
+ * genuine variable woff2 (wOF2 signature verified), and the `font-weight: 400
+ * 700` range is what declares the variable axis; the format string does not. */
+@font-face {
+  font-family: 'Onest';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./fonts/onest.woff2') format('woff2');
+}
+
+:root {
+  /* Body font -> the design system's base family, falling back to Payload's own
+   * system stack if the woff2 fails to load. */
+  --font-body:
+    var(--font-family-base), -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+
+  /* Corner radius -> the Tailwind radius scale kite-ui components use
+   * (`rounded-md` on Button, `rounded-lg` on Card), so Payload's own controls
+   * round to the same steps as the design system's. */
+  --style-radius-s: var(--radius-sm) !important;
+  --style-radius-m: var(--radius-md) !important;
+  --style-radius-l: var(--radius-lg) !important;
+
+  /* Horizontal gutter -> tighter than Payload's default 60px. Layout metric,
+   * not a design token. */
+  --gutter-h: 20px !important;
+
+  /* Focus ring -> the design system's focus color (brand). */
+  --accessibility-outline: 2px solid var(--color-bd-focus) !important;
+
+  /* Neutral scale. Payload derives every elevation/border/text token from
+   * --color-base-* (and inverts them for dark mode), so this one scale themes
+   * the whole admin.
+   *
+   * Payload's ramp has 21 stops; the design system's gray palette has 11. Each
+   * stop below therefore keeps Payload's own tuned lightness — the contrast
+   * steps its components are built around — while taking chroma and hue from
+   * the nearest kite-ui gray via relative color syntax. Result: the admin's
+   * neutrals are the same gray family as the platform's, with Payload's
+   * elevation contrast intact. The white and black anchors stay exact; Payload
+   * uses them for overlays and shadows, not just surfaces. */
+  --color-base-0: var(--color-white) !important;
+  --color-base-50: oklch(from var(--color-gray-100) 0.967 c h) !important;
+  --color-base-100: oklch(from var(--color-gray-100) 0.943 c h) !important;
+  --color-base-150: oklch(from var(--color-gray-200) 0.908 c h) !important;
+  --color-base-200: oklch(from var(--color-gray-200) 0.872 c h) !important;
+  --color-base-250: oklch(from var(--color-gray-300) 0.836 c h) !important;
+  --color-base-300: oklch(from var(--color-gray-300) 0.797 c h) !important;
+  --color-base-350: oklch(from var(--color-gray-300) 0.76 c h) !important;
+  --color-base-400: oklch(from var(--color-gray-400) 0.719 c h) !important;
+  --color-base-450: oklch(from var(--color-gray-400) 0.681 c h) !important;
+  --color-base-500: oklch(from var(--color-gray-400) 0.639 c h) !important;
+  --color-base-550: oklch(from var(--color-gray-500) 0.593 c h) !important;
+  --color-base-600: oklch(from var(--color-gray-500) 0.549 c h) !important;
+  --color-base-650: oklch(from var(--color-gray-500) 0.5 c h) !important;
+  --color-base-700: oklch(from var(--color-gray-600) 0.453 c h) !important;
+  --color-base-750: oklch(from var(--color-gray-700) 0.399 c h) !important;
+  --color-base-800: oklch(from var(--color-gray-700) 0.346 c h) !important;
+  --color-base-850: oklch(from var(--color-gray-800) 0.286 c h) !important;
+  --color-base-900: oklch(from var(--color-gray-900) 0.207 c h) !important;
+  --color-base-950: oklch(from var(--color-gray-950) 0.11 c h) !important;
+  --color-base-1000: var(--color-black) !important;
+}
+
+/* -- Brand the primary action buttons (Save / Publish / Create) ----------
+ * Payload's primary button reads three local custom props for its colors
+ * (verified in elements/Button/index.scss). Repointing them at the design
+ * system's primary tokens keeps every built-in state (disabled, loading, sizes)
+ * intact while matching the platform's filled button. */
+.btn--style-primary {
+  --color: var(--color-fg-on-primary) !important;
+  --bg-color: var(--color-bg-primary) !important;
+  --hover-color: var(--color-fg-on-primary) !important;
+  --hover-bg: var(--color-bg-primary-hover) !important;
+}
+
+/* -- Secondary buttons -> the design system's `outline` variant. Same local
+ * custom props as the primary above. Without this, Payload's default secondary
+ * (a heavy dark outline) sits next to a DS-branded primary — visible on the
+ * leave-without-saving modal's "Stay on this page". */
+.btn--style-secondary {
+  --color: var(--color-fg-normal) !important;
+  --bg-color: transparent !important;
+  --btn-border: 1px solid var(--color-bd-neutral-subtle) !important;
+  --hover-color: var(--color-fg-normal) !important;
+  --hover-btn-border: 1px solid var(--color-bd-neutral) !important;
+  --hover-bg: var(--color-bg-neutral-subtle-hover) !important;
+}
+
+/* -- Headings -> the design system's heading family. kite-ui applies this to
+ *    h1–h6 globally in its `tailwind-overrides.css`, which admin-ds.css
+ *    deliberately does not load (its base layer would also strip Payload's
+ *    transitions and borders), so the rule is re-declared here scoped to the
+ *    admin content shell. `.template-default` is the documented admin grid
+ *    wrapper, already relied on by admin-overrides.css. ------------------- */
+.template-default :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-family-heading) !important;
+}
+
+/* -- Polish: match the product's crisp text rendering. -------------------- */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

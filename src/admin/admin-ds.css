@@ -1,0 +1,307 @@
+/* Kite design system (@appsmithorg/kite-ui) inside the embedded Payload admin.
+ *
+ * This is the same design system the platform frontend uses, so the Content tab
+ * and the rest of the product share one set of tokens, surface classes and
+ * component styles instead of the admin carrying a hand-rolled copy.
+ *
+ * This is the single admin stylesheet entry point — HiddenNav.tsx imports only
+ * this file, and it pulls in the other three in cascade order:
+ *   admin-ds.css       -> this file: Tailwind + kite-ui tokens/utilities
+ *   admin-overrides.css-> hidden-nav grid fix
+ *   admin-theme.css    -> maps these tokens onto Payload's theming contract
+ *   admin-skin.css     -> restyles Payload's own view structure
+ *
+ * They are imported here rather than as four separate side-effect imports from
+ * HiddenNav.tsx so that cascade order is stated in one place instead of being
+ * whatever order the bundler happens to emit, and so every design-system token
+ * these sheets reference by `var()` is resolved in the same Tailwind compilation
+ * that defines it. Tailwind does tree-shake `@theme` variables (a `next build`
+ * of this admin emits 28 of kite-ui's 53 semantic color tokens), so a token
+ * referenced only by admin-theme.css or admin-skin.css is the kind of thing that
+ * can go missing when they are compiled apart — keeping one entry point removes
+ * the question. Splitting them back out was measured and did NOT drop any token
+ * these sheets currently use, so this is defensive structure, not a fix.
+ *
+ * Three deliberate deviations from kite-ui's documented consumer contract
+ * (`packages/kite-ui/src/styles.css`), all forced by living inside Payload's
+ * admin document rather than owning it:
+ *
+ * 1. No Tailwind preflight. `@import 'tailwindcss'` pulls preflight, which
+ *    resets borders, headings, lists, buttons and form controls — that would
+ *    detonate Payload's admin stylesheet. Payload ships its own reset
+ *    (`* { box-sizing: border-box }` and friends in @payloadcms/next's global
+ *    CSS), so preflight is redundant here as well as harmful. Tailwind's theme
+ *    and utilities are imported as the two separate subpath exports instead.
+ *
+ * 2. Not the package's aggregate `styles.css`. That pulls
+ *    `styles/tailwind-overrides.css`, whose base layer sets
+ *    `transition-property: none` and repaints `border-color` on `*`/`::before`/
+ *    `::after` — applied to the admin document that would strip every Payload
+ *    transition and recolor every Payload border. The three files that carry
+ *    tokens, surface classes, custom utilities and keyframes are imported
+ *    directly; the heading-font rule we do want from that file is re-declared
+ *    scoped to the admin shell in admin-theme.css, and the two focus-ring
+ *    shadow tokens we want are re-declared in the `@theme` block below.
+ *
+ * 3. Everything here is UNLAYERED, on purpose. Payload wraps its entire
+ *    stylesheet in `@layer payload-default` (verified in
+ *    node_modules/@payloadcms/ui/dist/styles.css and @payloadcms/next's global
+ *    CSS). Unlayered rules outrank any cascade layer regardless of specificity
+ *    or stylesheet order, so importing Tailwind's utilities without a
+ *    `layer(...)` assignment makes them win against Payload deterministically —
+ *    which is what lets the admin slot components style themselves with plain
+ *    utility classes and no `!important`. Assigning them to `@layer utilities`
+ *    would make the outcome depend on which stylesheet the bundler emits first.
+ */
+@import 'tailwindcss/theme.css';
+@import 'tailwindcss/utilities.css';
+
+/* Enter/exit animation utilities (`animate-in`, `fade-in-0`, `zoom-in-95`…).
+ * kite-ui's consumer contract makes this the consumer's responsibility, and its
+ * Radix-backed components (Dialog, Popover, Tooltip…) style their transitions
+ * with these classes — without it they mount and unmount with no animation. */
+@import 'tw-animate-css';
+
+/* Design-system tokens (+ the `surface-*` depth classes), the custom utilities
+ * (`box-trim`, `scrollbar-none`, gradients…) and component keyframes. */
+@import '@appsmithorg/kite-ui/styles/theme.css';
+@import '@appsmithorg/kite-ui/styles/utilities.css';
+@import '@appsmithorg/kite-ui/styles/animations.css';
+
+/* The focus-ring shadows Button, Input, Textarea and Switch style themselves
+ * with (`focus-visible:shadow-focus`). They live in the package's
+ * `tailwind-overrides.css`, which deviation 2 above excludes wholesale, so they
+ * are re-declared here — the same treatment the heading-font rule gets.
+ *
+ * Without this the utility cannot be generated at all: Tailwind silently drops
+ * a utility whose token is undefined, so every design-system control in the
+ * admin rendered with NO focus ring. `--color-sd-focus` is already defined by
+ * the theme import above; it was being tree-shaken out precisely because
+ * nothing referenced it. */
+@theme {
+  /* kite-ui redefines semibold as 550 (a variable-font weight) in its
+   * `tailwind-overrides.css`, which deviation 2 excludes — so `font-semibold`
+   * here fell back to Tailwind's 600 and headings rendered heavier than the
+   * platform's. */
+  --font-weight-semibold: 550;
+
+  --shadow-focus: 0 0 0 3px var(--color-sd-focus);
+  --shadow-negative-focus: 0 0 0 3px var(--color-sd-negative-focus);
+
+  /* ---------------------------------------------------------------------- */
+  /* Absolute scale — the admin's root font-size is 13px, not 16px           */
+  /* ---------------------------------------------------------------------- */
+  /* @payloadcms/next's global CSS sets `html { font-size: 13px }`. Tailwind's
+   * scale is rem-based and root-relative, so EVERY design-system size in this
+   * admin came out at 13/16 = 81.25% of the platform: `h-9` is
+   * `calc(var(--spacing) * 9)` with `--spacing: 0.25rem`, i.e. 3.25px x 9 =
+   * 29.25px instead of 36px. The same 0.8125 factor applied to every padding,
+   * gap, font-size and radius — which is why DS controls read as subtly shrunken
+   * next to the same components in the platform frontend.
+   *
+   * Pinning the scale to absolute px restores parity. rem is relative to the
+   * ROOT, so this cannot be fixed by setting a font-size on a container; and
+   * overriding `html` to 16px is not an option because Payload's own chrome is
+   * built on 13px rem math and would inflate by 1.23x.
+   *
+   * Safe to scope this way: `--spacing`, `--text-*` and `--radius-*` are
+   * Tailwind's own tokens, consumed only by the utility classes our DS
+   * components use. Payload's spacing runs off its own `--base`, so nothing
+   * Payload renders is affected. Values are the platform's effective pixels
+   * (i.e. the rem defaults resolved at a 16px root). */
+  --spacing: 4px;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* shadcn-era compatibility tokens. kite-ui's Input, Textarea, Field and Card
+   * still style themselves with `border-input`, `text-muted-foreground`,
+   * `text-destructive`, `selection:bg-primary` and `text-card-foreground`, but
+   * the package defines NONE of those five (verified: zero hits across
+   * kite-ui/src/styles and frontend/src/styles.css). Tailwind silently drops a
+   * utility whose token is undefined, so each one is inert.
+   *
+   * The platform frontend never notices because it loads Tailwind PREFLIGHT,
+   * whose base reset supplies a default `border-color` — which is what makes
+   * its inputs read as soft grey even though `border-input` never generates.
+   * Deviation 1 above excludes preflight from this admin on purpose, so the
+   * same inputs fell back to `currentColor` and rendered near-black borders,
+   * visibly unlike the rest of the product.
+   *
+   * Mapping them to the real semantic tokens fixes the DS components without
+   * reintroducing preflight or touching Payload's own borders. Remove these if
+   * kite-ui ever defines them itself. */
+  --color-input: var(--color-bd-neutral-subtle);
+  --color-muted-foreground: var(--color-fg-subtle);
+  --color-destructive: var(--color-fg-negative);
+  --color-primary: var(--color-bg-primary);
+  --color-card-foreground: var(--color-fg-normal);
+  /* Table leans on two more of the same: TableHead is `text-foreground` and
+   * TableRow `hover:bg-muted/50 data-[state=selected]:bg-muted`. */
+  --color-foreground: var(--color-fg-normal);
+  --color-muted: var(--color-bg-neutral-subtle);
+}
+
+/* The admin's own three stylesheets, in cascade order. */
+@import './admin-overrides.css';
+@import './admin-theme.css';
+@import './admin-skin.css';
+
+/* kite-ui lives in node_modules, which Tailwind's automatic source detection
+ * skips, so the utility classes baked into its components would never be
+ * generated. Scan the published build explicitly.
+ *
+ * ⚠ INVARIANT: one line per kite-ui component the admin imports — INCLUDING the
+ * ones it only reaches transitively (see `field` below). Sourcing the whole
+ * `dist` instead would harvest all ~66 components' classes and nearly double
+ * this stylesheet (measured on `next build`: 136KB raw / 23.1KB gzip for all of
+ * `dist`, vs 70KB / 13.5KB for the seven this started with). The cost of the
+ * narrower list is that adding a kite-ui import to `src/admin/*.tsx` WITHOUT
+ * adding its `@source` line here fails silently — the component renders with no
+ * styling at all rather than erroring. If a DS component in the admin looks
+ * unstyled, this list is the first place to look. */
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/badge';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/button';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/card';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/checkbox';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/dialog';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/dropdown-menu';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/field';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/icon';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/input';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/skeleton';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/spinner';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/switch';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/table';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/textarea';
+/* Transitive, via `field`: FieldLabel renders `label`, FieldSeparator renders
+ * `separator`. Their classes live in their own dist files, so they need their
+ * own lines even though nothing under src/admin/ imports them directly. */
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/label';
+@source '../../node_modules/@appsmithorg/kite-ui/dist/components/separator';
+
+/* Form-control font inheritance. Tailwind's preflight normally supplies
+ * `input, textarea, select, button { font: inherit }`; deviation 1 above
+ * excludes preflight, so the browser's UA stylesheet wins — and Chrome defaults
+ * <textarea> to `monospace`, which is why the SEO Description rendered in a
+ * mono face while the identical DS Textarea in the platform did not. Inputs are
+ * affected too, just less visibly (UA font family rather than the app's).
+ *
+ * Scoped to the design system's own controls by `data-slot`, so Payload's
+ * native inputs keep whatever its stylesheet gives them. */
+[data-slot='input'],
+[data-slot='textarea'] {
+  font-family: inherit;
+  letter-spacing: inherit;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Preflight substitutes                                                    */
+/* ---------------------------------------------------------------------- */
+/* Deviation 1 excludes Tailwind's preflight, but kite-ui's components are
+ * authored against a host that HAS it — they omit any rule preflight would have
+ * supplied. Each of these was a visible defect in this admin (dark button
+ * borders, a monospace textarea) before being restored here. Audited against
+ * tailwindcss/preflight.css rule by rule; the entries below are the ones the
+ * components the admin imports actually depend on.
+ *
+ * All zero-specificity (`:where`) or data-slot scoped, so Payload's own
+ * stylesheet and any real Tailwind utility both still win. Deliberately NOT
+ * restored: preflight's `img, svg { display: block }`, because Payload's own
+ * icons were authored expecting inline SVGs and every DS icon here already sits
+ * in a flex or grid parent, where the distinction has no effect. */
+
+/* Buttons and selects: inherit typography instead of the UA's control font.
+ * kite-ui's Button sets weight and size but never a family, so its filled
+ * variants rendered in the browser's UI font. Payload's `.btn` sets its own
+ * font at class specificity and is unaffected. */
+:where(button, select) {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+/* Default button border. Preflight's `*, ::before, ::after { border: 0 solid }`
+ * is what normally stops a <button> from showing the UA's default border —
+ * excluded here (deviation 1), so kite-ui's Button, which sets no border class
+ * on its filled variants, rendered with the browser's dark default. That is the
+ * black outline that appeared around Save.
+ *
+ * `:where()` gives this ZERO specificity, exactly as preflight does, so it is a
+ * floor rather than an override:
+ *   - Payload's `.btn` (class specificity) keeps its own
+ *     `border: var(--btn-border, 1px solid transparent)`.
+ *   - kite-ui's `outline` variant, which does apply Tailwind's `border`
+ *     utility, still gets its 1px — and now takes its colour from here, since
+ *     that utility sets width and style but no colour.
+ *   - Filled variants land on 0, which is what the platform renders. */
+:where(button) {
+  border: 0 solid var(--color-bd-neutral-subtle);
+}
+
+/* Switch thumb travel. kite-ui's Switch is a Radix `<button role="switch">`
+ * whose geometry assumes zero padding: 36x20 track, 2px transparent border,
+ * 16px thumb, 16px translate — so the thumb exactly spans the 32px interior.
+ * Preflight's `* { padding: 0 }` normally guarantees that; without it the UA's
+ * `padding: 1px 6px` shifts the thumb 6px right in BOTH states — sitting off
+ * the left edge when unchecked, overflowing the track when checked (the noindex
+ * toggle in the SEO section). Payload's reset only sets `box-sizing`, and it
+ * renders no `role="switch"` of its own, so this reaches nothing but the DS
+ * Switch. Not folded into the `:where(button)` rule above: Payload's bare
+ * buttons were authored against UA padding and would shift. */
+:where(button[role='switch']) {
+  padding: 0;
+}
+
+/* `<table>` defaults to `border-collapse: separate` with 2px spacing without
+ * preflight, which doubles borders and gaps the cells. kite-ui's Table sets
+ * neither, so the list view's table needs it restored. */
+:where([data-slot='table']) {
+  border-collapse: collapse;
+  border-color: inherit;
+  text-indent: 0;
+}
+
+/* kite-ui's Table wraps itself in `[data-slot=table-container]` carrying
+ * `rounded-lg border` with NO border-colour class, so the border resolved to
+ * `currentColor` — a near-black box around the list table. Give it the
+ * platform's table surface (see the Secrets page, which composes
+ * `surface-elevation-1 border-bd-neutral-subtle rounded-lg border` by hand). */
+:where([data-slot='table-container']) {
+  background-color: var(--color-bg-card);
+  border-color: var(--color-bd-neutral-subtle);
+}
+
+/* Field primitives that render margin-bearing elements: FieldDescription is a
+ * `<p>` (UA `margin-block: 1em`), FieldSet a `<fieldset>` (UA padding + border)
+ * and FieldLegend a `<legend>`. Only the `<p>` is in use today; the other two
+ * are included so reaching for them later does not resurface this. */
+:where(
+  [data-slot='field-description'],
+  [data-slot='field-set'],
+  [data-slot='field-legend']
+) {
+  border: 0 solid;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* kite-ui's semantic tokens are composed with `light-dark()`, which resolves
+   * against `color-scheme`. It has to be declared in CSS, not inferred: Next's
+   * CSS pipeline downlevels `light-dark()` into toggles that only react to a
+   * CSS-declared `color-scheme`. The admin pins `theme: 'light'` in
+   * payload.config.ts (the Content tab is a light surface and the admin is a
+   * separate document that inherits nothing from the platform shell), so pin
+   * the scheme to match — admin dark mode is a non-goal. */
+  color-scheme: light;
+}

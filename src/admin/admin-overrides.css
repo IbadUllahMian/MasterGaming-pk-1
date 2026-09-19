@@ -1,0 +1,29 @@
+/* Admin chrome overrides for the embedded Content tab.
+ *
+ * The admin Nav is hidden (admin.components.Nav -> HiddenNav, which renders
+ * null). Payload's admin shell is a two-column grid — `nav | content` — and it
+ * relies on the nav being the FIRST grid child so the content `__wrap` lands in
+ * the second column. With HiddenNav rendering null there is no nav element, so
+ * the lone `__wrap` auto-places into column ONE (the nav column) and collapses
+ * to the nav width — or to 0 once that column is zeroed. (This is why tuning the
+ * content column had no effect: the content was never in it.)
+ *
+ * Fix: with the nav gone the shell has a single child, so force a single
+ * full-width column. The content wrap then fills the admin regardless of which
+ * track Payload's own rules would otherwise define. `!important` because
+ * Payload's @payloadcms/ui CSS is bundled after this file and sets the
+ * `.template-default` grid in several nav states.
+ *
+ * Loaded as a side-effect import from HiddenNav.tsx (always mounted in the admin
+ * layout), so no extra importMap entry or config wiring is required. */
+.template-default {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* The nav toggler (the chevron/hamburger button top-left) only opens/closes the
+ * nav we've hidden, so it's dead chrome. Payload reserves a fixed gutter-width
+ * column for it on the left of the content; hiding the wrapper removes both the
+ * button and that reserved column so the content starts flush-left. */
+.template-default__nav-toggler-wrapper {
+  display: none !important;
+}

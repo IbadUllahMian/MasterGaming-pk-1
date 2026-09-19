@@ -1,0 +1,20 @@
+{
+  "brand": {
+    "companyName": "Your company",
+    "logoUrl": "",
+    "colors": {
+      "primary": "#2563eb",
+      "primaryForeground": "#ffffff",
+      "background": "#ffffff",
+      "foreground": "#172033",
+      "card": "#ffffff",
+      "cardForeground": "#172033",
+      "muted": "#f1f5f9",
+      "mutedForeground": "#64748b",
+      "accent": "#eff6ff",
+      "accentForeground": "#1e3a8a",
+      "border": "#e2e8f0",
+      "ring": "#2563eb"
+    }
+  }
+}
