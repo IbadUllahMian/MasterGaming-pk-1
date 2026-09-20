@@ -106,9 +106,15 @@ function MatchRoomAndLeaderboard({ tournament }: { tournament: LiveTournament })
     let active = true;
     void authAdapter.getSession().then(async (session) => {
       if (!session || session.user.role !== 'Player') { if (active) setRegistration('not-registered'); return; }
-      const response = await fetch(`/cms-api/tournament-registrations?limit=1&where[tournament][equals]=${encodeURIComponent(String(tournament.id))}`, { credentials: 'include', cache: 'no-store' });
-      const payload = response.ok ? await response.json() as { docs: Registration[] } : { docs: [] };
-      if (active) setRegistration(payload.docs.length ? 'registered' : 'not-registered');
+      try {
+        const response = await fetch(`/cms-api/tournament-registrations?limit=1&where[tournament][equals]=${encodeURIComponent(String(tournament.id))}`, { credentials: 'include', cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to verify your tournament registration.');
+        const payload = await response.json() as { docs: Registration[] };
+        if (active) setRegistration(payload.docs.length ? 'registered' : 'not-registered');
+      } catch {
+        // Do not reveal room credentials when registration verification fails.
+        if (active) setRegistration('not-registered');
+      }
     });
     void fetch(`/cms-api/match-results?depth=1&limit=200&where[tournament][equals]=${encodeURIComponent(String(tournament.id))}`, { credentials: 'include', cache: 'no-store' }).then(async (response) => response.ok ? response.json() as Promise<{ docs: MatchResult[] }> : { docs: [] }).then((payload) => { if (active) setResults(payload.docs); }).catch(() => undefined);
     return () => { active = false; };

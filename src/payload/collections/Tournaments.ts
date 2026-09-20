@@ -19,7 +19,7 @@ export const Tournaments: CollectionConfig = {
   },
   access: {
     create: ({ req }) => isPlatformAdmin(req.user),
-    read: ({ req }) => isPlatformAdmin(req.user) || (isPlatformPlayer(req.user) ? { status: { in: ['REGISTERING', 'ROOM READY', 'LIVE'] } } : false),
+    read: ({ req }) => isPlatformAdmin(req.user) || { status: { in: ['REGISTERING', 'ROOM READY', 'LIVE'] } },
     update: ({ req }) => isPlatformAdmin(req.user),
     delete: ({ req }) => isPlatformAdmin(req.user),
   },
@@ -60,6 +60,31 @@ export const Tournaments: CollectionConfig = {
       type: 'group',
       label: 'Match room settings',
       admin: { description: 'Room access is managed by Admin accounts only.' },
+      access: {
+        read: async ({ req, doc }) => {
+          if (isPlatformAdmin(req.user)) return true;
+          if (!isPlatformPlayer(req.user)) return false;
+
+          const room = doc.matchRoom as { roomUnlockTime?: string } | undefined;
+          const unlockTime = room?.roomUnlockTime ? new Date(room.roomUnlockTime).getTime() : Number.NaN;
+          if (!Number.isFinite(unlockTime) || unlockTime > Date.now()) return false;
+
+          const registration = await req.payload.find({
+            collection: 'tournament-registrations',
+            limit: 1,
+            depth: 0,
+            overrideAccess: true,
+            where: {
+              and: [
+                { tournament: { equals: doc.id } },
+                { player: { equals: req.user?.id } },
+                { status: { equals: 'REGISTERED' } },
+              ],
+            },
+          });
+          return registration.totalDocs > 0;
+        },
+      },
       fields: [
         { name: 'roomId', type: 'text', label: 'Room ID' },
         { name: 'roomPassword', type: 'text', label: 'Room password' },

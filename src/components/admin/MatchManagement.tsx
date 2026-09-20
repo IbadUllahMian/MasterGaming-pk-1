@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 type MatchRoom = { roomId?: string; roomPassword?: string; matchStartTime?: string; roomUnlockTime?: string; status?: 'Upcoming' | 'Room Ready' | 'Live' | 'Completed' };
 type Tournament = { id: string | number; name: string; status: string; schedule: string; matchRoom?: MatchRoom };
 type Registration = { id: string | number; player?: { id: string | number; full_name?: string; username?: string } | string | number };
-type TournamentUpdateResponse = { docs?: Tournament[] };
 
 const fetchDocs = async <T,>(url: string): Promise<T[]> => {
   const response = await fetch(url, { credentials: 'include', cache: 'no-store' });
@@ -62,8 +61,7 @@ export function MatchManagement() {
     try {
       const response = await fetch(`/cms-api/tournaments/${encodeURIComponent(tournamentId)}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ matchRoom }) });
       if (!response.ok) { setNoticeKind('error'); setNotice(await responseMessage(response)); return; }
-      const payload = await response.json() as TournamentUpdateResponse;
-      const saved = payload.docs?.find((tournament) => String(tournament.id) === tournamentId) ?? payload.docs?.[0];
+      const saved = await response.json() as Tournament;
       if (!saved || String(saved.id) !== tournamentId) {
         setNoticeKind('error'); setNotice('Room settings could not be confirmed for the selected tournament. Please try again.'); return;
       }
