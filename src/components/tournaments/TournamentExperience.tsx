@@ -212,7 +212,7 @@ export function TournamentDetails({ id }: { id: string }) {
       credentials: 'include',
       cache: 'no-store',
     });
-    if (!response.ok) return 'not-registered' as const;
+    if (!response.ok) throw new Error('Unable to verify your tournament registration.');
     const payload = await response.json() as { docs: Registration[] };
     return payload.docs.length ? 'registered' as const : 'not-registered' as const;
   }, [id]);
@@ -225,8 +225,15 @@ export function TournamentDetails({ id }: { id: string }) {
         if (active) setRegistration('not-registered');
         return;
       }
-      const nextRegistration = await refreshRegistration().catch(() => 'not-registered' as const);
-      if (active) setRegistration(nextRegistration);
+      try {
+        const nextRegistration = await refreshRegistration();
+        if (active) setRegistration(nextRegistration);
+      } catch (reason) {
+        if (active) {
+          setNotice({ kind: 'error', message: getThrownMessage(reason) || 'Unable to verify your tournament registration.' });
+          setRegistration('not-registered');
+        }
+      }
     });
     return () => { active = false; };
   }, [id, refresh, refreshRegistration]);

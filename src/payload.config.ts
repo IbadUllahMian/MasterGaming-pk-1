@@ -16,6 +16,11 @@ import { attachPoolErrorHandler } from './payload/pool-error-handler';
 import { resolveSchemaName } from './payload/schema-name';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+// Imported applications may retain their existing DATABASE_URI name. Prefer the
+// platform's APP_DATABASE_URL when present while accepting that established
+// connection setting so every Payload route, including player login, boots
+// against the same database.
+const databaseUrl = process.env.APP_DATABASE_URL || process.env.DATABASE_URI || '';
 
 export default buildConfig({
   // Each generated site has its own Neon Postgres. The three design iterations
@@ -26,7 +31,7 @@ export default buildConfig({
   // `payload migrate` step is needed.
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.APP_DATABASE_URL || '',
+       connectionString: databaseUrl,
       // The database is a remote Neon instance, so a fresh connection costs a
       // full cross-cloud TCP+TLS+auth handshake (hundreds of ms). node-postgres
       // closes idle clients after 10s by default, which makes the first query

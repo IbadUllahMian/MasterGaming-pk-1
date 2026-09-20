@@ -1,0 +1,11 @@
+{
+  "local": true,
+  "pid": 10879,
+  "userDataDir": "/tmp/kite-local-browser-MruDWZ",
+  "connectUrl": "http://127.0.0.1:42271",
+  "createdAt": "2026-09-20T01:00:57.451Z",
+  "lastErrors": [
+    "error: %c%s%c (node:12356) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.\nIn the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.\n\nTo prepare for this change:\n- If you want the current behavior, explicitly use 'sslmode=verify-full'\n- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'\n\nSee https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.\n(Use `node --trace-warnings ...` to show where the warning was created) background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server  "
+  ],
+  "lastErrorAt": "2026-09-20T01:09:56.547Z"
+}
