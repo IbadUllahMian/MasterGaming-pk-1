@@ -139,22 +139,34 @@ export interface UserAuthOperations {
   };
 }
 export interface PlatformUserAuthOperations {
-  forgotPassword: {
-    email: string;
-    password: string;
-  };
-  login: {
-    email: string;
-    password: string;
-  };
+  forgotPassword:
+    | {
+        email: string;
+      }
+    | {
+        username: string;
+      };
+  login:
+    | {
+        email: string;
+        password: string;
+      }
+    | {
+        password: string;
+        username: string;
+      };
   registerFirstUser: {
-    email: string;
     password: string;
+    username: string;
+    email?: string;
   };
-  unlock: {
-    email: string;
-    password: string;
-  };
+  unlock:
+    | {
+        email: string;
+      }
+    | {
+        username: string;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -188,7 +200,6 @@ export interface User {
 export interface PlatformUser {
   id: number;
   full_name: string;
-  username: string;
   role: 'Admin' | 'Player';
   permissions?:
     | (
@@ -207,7 +218,8 @@ export interface PlatformUser {
   mobile_number: string;
   updatedAt: string;
   createdAt: string;
-  email: string;
+  email?: string | null;
+  username: string;
   resetPasswordToken?: string | null;
   resetPasswordExpiration?: string | null;
   salt?: string | null;
@@ -917,7 +929,6 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface PlatformUsersSelect<T extends boolean = true> {
   full_name?: T;
-  username?: T;
   role?: T;
   permissions?: T;
   free_fire_uid?: T;
@@ -926,6 +937,7 @@ export interface PlatformUsersSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   email?: T;
+  username?: T;
   resetPasswordToken?: T;
   resetPasswordExpiration?: T;
   salt?: T;

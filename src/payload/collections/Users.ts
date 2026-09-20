@@ -86,6 +86,10 @@ export async function promoteExistingPlatformOwner(payload: Payload) {
 export const PlatformUsers: CollectionConfig = {
   slug: 'platform-users',
   auth: {
+    // Existing players have both an email and a username. Accept either value
+    // at the built-in Payload login endpoint so the current client identity
+    // field resolves against the same database-backed account record.
+    loginWithUsername: { allowEmailLogin: true },
     // The public app and Payload REST endpoints share one first-party origin.
     // Payload writes this HttpOnly cookie on login; browser navigations then
     // carry it to the server-side /admin-panel guard.
