@@ -29,7 +29,10 @@ export default buildConfig({
   // `payload migrate` step is needed.
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.APP_DATABASE_URL || '',
+      // Imported MasterGaming supplies its database connection as DATABASE_URI.
+      // Keep APP_DATABASE_URL first for Kite-managed deployments, while using
+      // the import's existing variable so Payload can initialize in this app.
+      connectionString: process.env.APP_DATABASE_URL || process.env.DATABASE_URI || '',
       // The database is a remote Neon instance, so a fresh connection costs a
       // full cross-cloud TCP+TLS+auth handshake (hundreds of ms). node-postgres
       // closes idle clients after 10s by default, which makes the first query
