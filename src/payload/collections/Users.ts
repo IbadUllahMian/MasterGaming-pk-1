@@ -74,13 +74,8 @@ const isPlatformAdmin = (user: unknown) => {
   return candidate?.collection === 'platform-users' && candidate.role === 'Admin';
 };
 
-/** Reconciles persisted roles on backend boot; signup/update is covered by the collection hook. */
+/** Preserves the provisioned owner role and removes untrusted Admin assignments. */
 export async function promoteExistingPlatformOwner(payload: Payload) {
-  const existing = await payload.find({ collection: 'platform-users', where: { email: { equals: normalizedOwnerEmail() } }, limit: 1, depth: 0, overrideAccess: true });
-  const owner = existing.docs[0];
-  if (owner && (owner.role !== 'Admin' || JSON.stringify(owner.permissions ?? []) !== JSON.stringify(PLATFORM_ADMIN_PERMISSIONS))) {
-    await payload.update({ collection: 'platform-users', id: owner.id, data: { role: 'Admin', permissions: PLATFORM_ADMIN_PERMISSIONS }, overrideAccess: true });
-  }
   const nonOwnerAdmins = await payload.find({ collection: 'platform-users', where: { and: [{ role: { equals: 'Admin' } }, { email: { not_equals: normalizedOwnerEmail() } }] }, limit: 100, depth: 0, overrideAccess: true });
   await Promise.all(nonOwnerAdmins.docs.map((user) => payload.update({ collection: 'platform-users', id: user.id, data: { role: 'Player', permissions: [] }, overrideAccess: true })));
 }
@@ -105,13 +100,21 @@ export const PlatformUsers: CollectionConfig = {
     delete: ({ req }) => isPlatformAdmin(req.user),
   },
   hooks: {
-    beforeChange: [({ data, originalDoc }) => {
-      const email = String(data.email ?? originalDoc?.email ?? '').trim().toLowerCase();
-      const isOwner = Boolean(normalizedOwnerEmail() && email === normalizedOwnerEmail());
-      // Role and permissions are always assigned from verified account identity;
-      // client-submitted values can never promote an account.
-      data.role = isOwner ? 'Admin' : 'Player';
-      data.permissions = isOwner ? [...platformPermissions] : [];
+    beforeChange: [({ data, operation, originalDoc, req }) => {
+      if (operation === 'update' && !isPlatformAdmin(req.user)) {
+        // A player must never gain elevated access by changing profile data.
+        // Keep authorization fields tied to the persisted account identity.
+        data.email = originalDoc?.email;
+        data.role = originalDoc?.role ?? 'Player';
+        data.permissions = originalDoc?.permissions ?? [];
+        return data;
+      }
+      // Public registration never grants an administrative role. The configured
+      // owner must be provisioned in the trusted shared account data.
+      if (operation === 'create') {
+        data.role = 'Player';
+        data.permissions = [];
+      }
       return data;
     }],
   },

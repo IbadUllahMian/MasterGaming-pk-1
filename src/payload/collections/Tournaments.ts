@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload';
+import type { CollectionConfig, Payload } from 'payload';
 
 const isPlatformAdmin = (user: unknown) => {
   const candidate = user as { collection?: string; role?: string } | null;
@@ -7,6 +7,19 @@ const isPlatformAdmin = (user: unknown) => {
 const isPlatformPlayer = (user: unknown) => {
   const candidate = user as { collection?: string; role?: string } | null;
   return candidate?.collection === 'platform-users' && candidate.role === 'Player';
+};
+const canReadRoomCredentials = async (user: unknown, payload: Payload, tournamentId: number | string) => {
+  if (isPlatformAdmin(user)) return true;
+  const candidate = user as { collection?: string; role?: string; id?: number | string } | null;
+  if (candidate?.collection !== 'platform-users' || candidate.role !== 'Player' || !candidate.id) return false;
+  const registration = await payload.find({
+    collection: 'tournament-registrations',
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+    where: { and: [{ tournament: { equals: tournamentId } }, { player: { equals: candidate.id } }] },
+  });
+  return registration.totalDocs > 0;
 };
 
 export const Tournaments: CollectionConfig = {
@@ -19,7 +32,9 @@ export const Tournaments: CollectionConfig = {
   },
   access: {
     create: ({ req }) => isPlatformAdmin(req.user),
-    read: ({ req }) => isPlatformAdmin(req.user) || (isPlatformPlayer(req.user) ? { status: { in: ['REGISTERING', 'ROOM READY', 'LIVE'] } } : false),
+    // Tournament discovery is public, while writes remain Admin-only and
+    // registration remains Player-only in the registrations collection.
+    read: ({ req }) => isPlatformAdmin(req.user) || { status: { in: ['REGISTERING', 'ROOM READY', 'LIVE'] } },
     update: ({ req }) => isPlatformAdmin(req.user),
     delete: ({ req }) => isPlatformAdmin(req.user),
   },
@@ -61,8 +76,9 @@ export const Tournaments: CollectionConfig = {
       label: 'Match room settings',
       admin: { description: 'Room access is managed by Admin accounts only.' },
       fields: [
-        { name: 'roomId', type: 'text', label: 'Room ID' },
-        { name: 'roomPassword', type: 'text', label: 'Room password' },
+        // Room credentials are returned only to an Admin or a registered Player.
+        { name: 'roomId', type: 'text', label: 'Room ID', access: { read: async ({ req, id }) => id !== undefined && canReadRoomCredentials(req.user, req.payload, id) } },
+        { name: 'roomPassword', type: 'text', label: 'Room password', access: { read: async ({ req, id }) => id !== undefined && canReadRoomCredentials(req.user, req.payload, id) } },
         { name: 'matchStartTime', type: 'date', label: 'Match start time', admin: { date: { pickerAppearance: 'dayAndTime' } } },
         { name: 'roomUnlockTime', type: 'date', label: 'Room unlock time', admin: { date: { pickerAppearance: 'dayAndTime' } } },
         { name: 'status', type: 'select', label: 'Match status', defaultValue: 'Upcoming', options: ['Upcoming', 'Room Ready', 'Live', 'Completed'] },
