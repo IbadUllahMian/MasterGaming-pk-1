@@ -63,24 +63,26 @@ export const Users: CollectionConfig = {
 };
 
 const platformPermissions = [
-  'tournaments.manage', 'players.manage', 'teams.manage', 'results.manage', 'payments.review', 'withdrawals.review', 'wallet.manage', 'settings.manage',
+  'tournaments.manage', 'players.manage', 'registrations.manage', 'rooms.manage', 'results.manage', 'finance.manage', 'payments.review', 'withdrawals.review', 'wallet.manage', 'settings.manage',
 ] as const;
 
 export const PLATFORM_OWNER_EMAIL = 'ibadullahmian6@gmail.com';
 export const PLATFORM_ADMIN_PERMISSIONS = [...platformPermissions];
-const normalizedOwnerEmail = () => PLATFORM_OWNER_EMAIL;
+const normalizedOwnerEmail = () => PLATFORM_OWNER_EMAIL.trim().toLowerCase();
 const isPlatformAdmin = (user: unknown) => {
   const candidate = user as { collection?: string; role?: string } | null;
   return candidate?.collection === 'platform-users' && candidate.role === 'Admin';
 };
 
-/** Reconciles an existing owner record on backend boot; signup/update is covered by the collection hook. */
+/** Reconciles persisted roles on backend boot; signup/update is covered by the collection hook. */
 export async function promoteExistingPlatformOwner(payload: Payload) {
-  const existing = await payload.find({ collection: 'platform-users', where: { email: { equals: PLATFORM_OWNER_EMAIL } }, limit: 1, depth: 0, overrideAccess: true });
+  const existing = await payload.find({ collection: 'platform-users', where: { email: { equals: normalizedOwnerEmail() } }, limit: 1, depth: 0, overrideAccess: true });
   const owner = existing.docs[0];
   if (owner && (owner.role !== 'Admin' || JSON.stringify(owner.permissions ?? []) !== JSON.stringify(PLATFORM_ADMIN_PERMISSIONS))) {
     await payload.update({ collection: 'platform-users', id: owner.id, data: { role: 'Admin', permissions: PLATFORM_ADMIN_PERMISSIONS }, overrideAccess: true });
   }
+  const nonOwnerAdmins = await payload.find({ collection: 'platform-users', where: { and: [{ role: { equals: 'Admin' } }, { email: { not_equals: normalizedOwnerEmail() } }] }, limit: 100, depth: 0, overrideAccess: true });
+  await Promise.all(nonOwnerAdmins.docs.map((user) => payload.update({ collection: 'platform-users', id: user.id, data: { role: 'Player', permissions: [] }, overrideAccess: true })));
 }
 
 export const PlatformUsers: CollectionConfig = {
@@ -90,6 +92,10 @@ export const PlatformUsers: CollectionConfig = {
     // Payload writes this HttpOnly cookie on login; browser navigations then
     // carry it to the server-side /admin-panel guard.
     cookies: { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' },
+    // The player JWT must not share the CMS/admin cookie namespace. This keeps
+    // a player login, the role-protected control panel, and the embedded CMS
+    // session independently authenticated on the same first-party origin.
+    loginWithUsername: { allowEmailLogin: true, requireEmail: false, requireUsername: false },
   },
   admin: { useAsTitle: 'email', hideAPIURL: true, hidden: true },
   access: {
@@ -104,8 +110,8 @@ export const PlatformUsers: CollectionConfig = {
       const isOwner = Boolean(normalizedOwnerEmail() && email === normalizedOwnerEmail());
       // Role and permissions are always assigned from verified account identity;
       // client-submitted values can never promote an account.
-      data.role = isOwner ? 'Admin' : (originalDoc?.role === 'Admin' ? 'Admin' : 'Player');
-      data.permissions = isOwner || data.role === 'Admin' ? [...platformPermissions] : [];
+      data.role = isOwner ? 'Admin' : 'Player';
+      data.permissions = isOwner ? [...platformPermissions] : [];
       return data;
     }],
   },

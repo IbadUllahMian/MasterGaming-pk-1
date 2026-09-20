@@ -120,7 +120,7 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
           <Field label="Email" error={errors.email}><input name="email" type="email" autoComplete="email" aria-invalid={Boolean(errors.email)} /></Field>
           <Field label="Mobile number" hint="Used by the tournament desk for verified account contact." error={errors.mobileNumber}><input name="mobileNumber" type="tel" autoComplete="tel" inputMode="tel" aria-invalid={Boolean(errors.mobileNumber)} /></Field>
         </>}
-        {!register && <Field label="Email" error={errors.identity}><input name="identity" type="email" autoComplete="email" aria-invalid={Boolean(errors.identity)} /></Field>}
+        {!register && <Field label="Email or username" error={errors.identity}><input name="identity" autoComplete="username" aria-invalid={Boolean(errors.identity)} /></Field>}
         <Field label="Password" hint={register ? 'Use at least 8 characters. Final rules are set by secure authentication.' : undefined} error={errors.password}><input name="password" type="password" autoComplete={register ? 'new-password' : 'current-password'} aria-invalid={Boolean(errors.password)} /></Field>
         {register && <>
           <Field label="Confirm password" error={errors.confirmPassword}><input name="confirmPassword" type="password" autoComplete="new-password" aria-invalid={Boolean(errors.confirmPassword)} /></Field>

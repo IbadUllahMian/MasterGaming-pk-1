@@ -18,6 +18,9 @@ import { resolveSchemaName } from './payload/schema-name';
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default buildConfig({
+  // Separate player authentication from Payload's CMS session cookie so the
+  // role-protected player/admin application can coexist with `/admin`.
+  cookiePrefix: 'mastergaming-player',
   // Each generated site has its own Neon Postgres. The three design iterations
   // share one database but stay isolated via a per-iter Postgres schema
   // (`payload_iter1/2/3`); the selected iter's schema is carried into the
