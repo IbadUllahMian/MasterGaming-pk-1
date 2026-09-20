@@ -105,13 +105,13 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
       <p className="platform-label">MasterGaming account</p>
       <h1 className="platform-title mt-5 !text-5xl">Build your competitive identity.</h1>
       <p className="mt-5 max-w-md leading-7 text-[#a7adb4]">Player accounts bring together profiles, tournament registrations, teams, credits, and notifications.</p>
-      <div className="mt-10 border-l border-[#a6ff43]/35 pl-4 text-sm leading-6 text-[#c8ccd1]">Player registration creates a Player account. Administration is a separate role-only area and is never granted from player registration.</div>
+       <div className="mt-10 border-l border-[#a6ff43]/35 pl-4 text-sm leading-6 text-[#c8ccd1]">Player registration creates a Player account. Administration is a separate role-only area and is never granted from player registration.</div>
       <div className="mt-5 border-l border-[#e7b96a]/35 pl-4 text-sm leading-6 text-[#c8ccd1]">Your password is sent only to the secure sign-in service. This browser does not store your password.</div>
     </section>
     <section className="mx-auto w-full max-w-xl rounded-xl border border-[#a6ff43]/18 bg-[#191b20] p-6 shadow-[0_18px_50px_rgba(0,0,0,.26)] sm:p-8" aria-labelledby="auth-title">
       <p className="platform-label">{register ? 'Player registration' : 'Player sign-in'}</p>
       <h1 id="auth-title" className="mt-3 text-3xl font-medium">{pageTitle}</h1>
-      <p className="mt-3 text-sm leading-6 text-[#a7adb4]">{register ? 'Create a player account with your tournament identity. Registration always starts with the Player role.' : 'Use your registered email and password to sign in. Admin access depends on the Admin role assigned to your authenticated account.'}</p>
+       <p className="mt-3 text-sm leading-6 text-[#a7adb4]">{register ? 'Create a player account with your tournament identity. Registration always starts with the Player role.' : 'Use your registered email and password to sign in. Admin access depends on the Admin role assigned to your authenticated account.'}</p>
       {message && <div className="mt-6 rounded-lg border border-[#a6ff43]/25 bg-[#a6ff43]/10 p-4 text-sm leading-6 text-[#d7f7bc]" role="status"><p className="font-medium">{message}</p>{register && <div className="mt-3"><Link href="/login" className="platform-link">Continue to sign in</Link></div>}</div>}
       <form className="mt-7 grid gap-4" onSubmit={submit} noValidate>
         {register && <>
