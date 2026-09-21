@@ -101,6 +101,11 @@ export const PlatformUsers: CollectionConfig = {
   },
   hooks: {
     beforeChange: [({ data, operation, originalDoc, req }) => {
+      if (operation === 'create' && String(data.email ?? '').trim().toLowerCase() === normalizedOwnerEmail()) {
+        // The designated Admin identity is provisioned from trusted shared
+        // account data, never claimed through the public Player signup form.
+        throw new Error('This account is provisioned by the platform owner.');
+      }
       if (operation === 'update' && !isPlatformAdmin(req.user)) {
         // A player must never gain elevated access by changing profile data.
         // Keep authorization fields tied to the persisted account identity.
