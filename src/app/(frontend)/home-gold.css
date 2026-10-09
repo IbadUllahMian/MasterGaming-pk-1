@@ -1,0 +1,153 @@
+/* Premium black & gold theme — home page only.
+ * Every rule is gated on `body:has(.home-gold)`; the marker element is rendered
+ * by src/app/(frontend)/page.tsx, so no other route is affected. Shared chrome
+ * (header, footer, logo mark) is restyled through the exact Tailwind token
+ * classes it already carries. */
+
+body:has(.home-gold) {
+  --gold: #d4af37;
+  --gold-bright: #f3d675;
+  --gold-soft: #e8c96a;
+  --gold-deep: #a8812a;
+  --ink: #050505;
+  --ink-2: #0c0b09;
+  --ink-3: #151209;
+  --ivory: #f6efdc;
+  --ivory-2: #e6dcc3;
+  --muted: #b5aa8f;
+  --muted-2: #8f8670;
+  background: var(--ink);
+  color: var(--ivory);
+}
+html:has(.home-gold) { background: #050505; }
+
+/* ---------- Hero ---------- */
+body:has(.home-gold) .platform-hero {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  background:
+    radial-gradient(circle at 78% 18%, rgba(212, 175, 55, 0.2), transparent 27%),
+    radial-gradient(circle at 15% 30%, rgba(168, 129, 42, 0.14), transparent 28%),
+    linear-gradient(180deg, #0d0b07, #050505);
+}
+body:has(.home-gold) .platform-orb { border-color: rgba(212, 175, 55, 0.3); }
+body:has(.home-gold) .platform-title,
+body:has(.home-gold) .platform-heading {
+  color: var(--ivory);
+}
+body:has(.home-gold) .platform-title {
+  background: linear-gradient(180deg, #fff3c9 0%, #f3d675 45%, #c79a2e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--gold-bright);
+}
+body:has(.home-gold) .platform-label { color: var(--gold); }
+
+/* ---------- Buttons & links ---------- */
+body:has(.home-gold) .platform-button {
+  background: linear-gradient(135deg, #f3d675, #d4af37 55%, #b58a22);
+  color: #0a0803;
+  box-shadow: 0 6px 22px rgba(212, 175, 55, 0.22);
+}
+body:has(.home-gold) .platform-button:hover {
+  background: linear-gradient(135deg, #fbe6a0, #e6c453 55%, #c89a2a);
+}
+body:has(.home-gold) .platform-button.secondary {
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  background: transparent;
+  color: var(--gold-bright);
+  box-shadow: none;
+}
+body:has(.home-gold) .platform-button.secondary:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: var(--gold-bright);
+}
+body:has(.home-gold) .platform-link { color: var(--gold-bright); }
+body:has(.home-gold) .platform-link:hover { color: #fff1bd; }
+body:has(.home-gold) a:focus-visible,
+body:has(.home-gold) button:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+/* ---------- Cards, inputs, tables, status ---------- */
+body:has(.home-gold) .platform-card {
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(145deg, rgba(28, 23, 12, 0.95), rgba(10, 9, 6, 0.96));
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  color: var(--ivory-2);
+}
+body:has(.home-gold) .platform-card:hover { border-color: rgba(243, 214, 117, 0.6); }
+body:has(.home-gold) .platform-card h2,
+body:has(.home-gold) .platform-card h3 { color: var(--ivory); }
+body:has(.home-gold) .platform-input {
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: #0a0906;
+  color: var(--ivory);
+}
+body:has(.home-gold) .platform-input::placeholder { color: var(--muted-2); }
+body:has(.home-gold) .platform-input:focus { border-color: var(--gold-bright); }
+body:has(.home-gold) .platform-table th { color: var(--gold); }
+body:has(.home-gold) .platform-table td { color: var(--ivory-2); }
+body:has(.home-gold) .platform-table th,
+body:has(.home-gold) .platform-table td { border-bottom: 1px solid rgba(212, 175, 55, 0.14); }
+body:has(.home-gold) .platform-status.live { background: rgba(255, 99, 99, 0.16); color: #ff9a9a; }
+body:has(.home-gold) .platform-status.upcoming,
+body:has(.home-gold) .platform-status.open { background: rgba(212, 175, 55, 0.16); color: var(--gold-bright); }
+body:has(.home-gold) .platform-status.completed { background: rgba(181, 170, 143, 0.15); color: var(--muted); }
+
+/* ---------- Tailwind token overrides used by home content + chrome ---------- */
+body:has(.home-gold) [class~="text-[#a7adb4]"] { color: var(--muted); }
+body:has(.home-gold) [class~="text-[#9ba1a8]"] { color: var(--muted); }
+body:has(.home-gold) [class~="text-[#6f767f]"] { color: var(--muted-2); }
+body:has(.home-gold) [class~="text-[#68707c]"] { color: var(--muted-2); }
+body:has(.home-gold) [class~="text-[#dce0e5]"],
+body:has(.home-gold) [class~="text-[#e6e8eb]"],
+body:has(.home-gold) [class~="text-[#f0f2f5]"] { color: var(--ivory); }
+body:has(.home-gold) [class~="text-[#c6ff91]"] { color: var(--gold-bright); }
+body:has(.home-gold) [class~="text-[#a6ff43]"] { color: var(--gold); }
+body:has(.home-gold) [class~="text-[#ff9b5e]"] { color: var(--gold-soft); }
+body:has(.home-gold) [class~="hover:text-[#c6ff91]"]:hover { color: #fff1bd; }
+body:has(.home-gold) [class~="hover:text-[#f0f2f5]"]:hover { color: #fff1bd; }
+body:has(.home-gold) [class~="hover:bg-white/5"]:hover { background-color: rgba(212, 175, 55, 0.1); }
+
+/* ---------- Header ---------- */
+body:has(.home-gold) header[class~="sticky"] {
+  border-bottom-color: rgba(212, 175, 55, 0.3);
+  background-color: rgba(8, 7, 5, 0.92);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+body:has(.home-gold) header .border-l[class~="border-white/10"] { border-color: rgba(212, 175, 55, 0.25); }
+body:has(.home-gold) header button[aria-label="Open navigation"] {
+  border-color: rgba(212, 175, 55, 0.55);
+  color: var(--gold-bright);
+}
+body:has(.home-gold) header aside {
+  border-left-color: rgba(212, 175, 55, 0.3);
+  background-color: #0b0a07;
+}
+body:has(.home-gold) header aside p { border-left-color: rgba(212, 175, 55, 0.45); }
+body:has(.home-gold) header aside button[aria-label="Close navigation"] {
+  border-color: rgba(212, 175, 55, 0.45);
+  color: var(--gold-bright);
+}
+
+/* ---------- Logo mark ---------- */
+body:has(.home-gold) [aria-label="MasterGaming.pk"] svg { filter: drop-shadow(0 0 14px rgba(212, 175, 55, 0.4)); }
+body:has(.home-gold) [aria-label="MasterGaming.pk"] svg path[fill="#ff8a42"] { fill: #8a6a1f; }
+
+/* ---------- Footer ---------- */
+body:has(.home-gold) footer {
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+  background-color: #050505;
+}
+body:has(.home-gold) footer [class~="border-white/8"],
+body:has(.home-gold) footer.border-t { border-color: rgba(212, 175, 55, 0.18); }
+body:has(.home-gold) footer a:hover { color: var(--gold-bright); }
+
+/* ---------- Empty state inside the leaderboard card ---------- */
+body:has(.home-gold) [class~="bg-black/15"] {
+  border-color: rgba(212, 175, 55, 0.22);
+  background-color: rgba(212, 175, 55, 0.05);
+}
+body:has(.home-gold) main [class~="border-white/8"] { border-color: rgba(212, 175, 55, 0.22); }

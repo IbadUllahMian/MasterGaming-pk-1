@@ -1,0 +1,14 @@
+{
+  "schema_version": "2.3",
+  "primary_conversion": null,
+  "primary_conversion_event": null,
+  "primary_conversion_medium": null,
+  "events": [],
+  "media_event_names": [],
+  "has_item_stamp": false,
+  "has_unnamed_media_stamp": false,
+  "has_hooked_conversion_form": false,
+  "pages": [],
+  "shared": [],
+  "shared_surfaces": []
+}

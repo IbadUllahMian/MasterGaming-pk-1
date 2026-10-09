@@ -1,0 +1,13 @@
+{
+  "local": true,
+  "pid": 6101,
+  "userDataDir": "/tmp/kite-local-browser-QzY8t7",
+  "connectUrl": "http://127.0.0.1:40725",
+  "createdAt": "2026-10-09T02:04:40.327Z",
+  "lastErrors": [],
+  "lastErrorAt": "2026-10-09T02:05:10.816Z",
+  "viewport": {
+    "width": 1440,
+    "height": 1200
+  }
+}
